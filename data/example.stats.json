@@ -2,19 +2,19 @@
   "hello": {
     "text1": "world!",
     "text2": "world!",
-    "text4": "world!",
-    "text3": "world!"
+    "text3": "world!",
+    "text4": "world!"
   },
   "length": {
     "text1": 344,
     "text2": 316,
-    "text3": 195,
+    "text3": 403,
     "text4": 273
   },
   "alphanumeric": {
     "text1": 268,
     "text2": 247,
-    "text3": 156,
+    "text3": 312,
     "text4": 208
   },
   "with-date-in-metadata": {
@@ -65,7 +65,7 @@
   "token-count": {
     "text1": 131,
     "text2": 83,
-    "text3": 52,
+    "text3": 104,
     "text4": 91
   },
   "vocabulary-size": {
@@ -74,10 +74,28 @@
     "text3": 3,
     "text4": 3
   },
-  "semantic-diversity": {
+  "text-semantic-diversity": {
     "text1": 0.518449991941452,
     "text2": 0.9192670658230782,
-    "text3": 1.1920928955078125e-07,
+    "text3": 0.0,
     "text4": 0.0
+  },
+  "inner-outer-diversity": {
+    "text1": {
+      "inner": 0.028425097465515137,
+      "outer": 0.5035624320818904
+    },
+    "text2": {
+      "inner": 0.013810157775878906,
+      "outer": 0.8929142750128383
+    },
+    "text3": {
+      "inner": 0.01318204402923584,
+      "outer": 0.006473441501786081
+    },
+    "text4": {
+      "inner": 0.28519880771636963,
+      "outer": 0.14005286885159351
+    }
   }
 }
