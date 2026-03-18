@@ -10,6 +10,7 @@ from quality.metrics import (
     AlphanumericMetric,
     DateInMetadataMetric,
     VACARatioMetric,
+    TokenCountMetric,
 )
 from quality.core import process_metric_task, get_all_keys_from_file
 
@@ -49,6 +50,7 @@ def main():
         AlphanumericMetric(),
         DateInMetadataMetric(),
         VACARatioMetric(),
+        TokenCountMetric(),
     ]
 
     # Map metrics to their target keys
