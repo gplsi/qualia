@@ -1,0 +1,17 @@
+{
+  "hello": {
+    "text1": "world!",
+    "text2": "world!"
+  },
+  "length": {
+    "text1": 170,
+    "text2": 170
+  },
+  "alphanumeric": {
+    "text2": 134,
+    "text1": 133
+  },
+  "with-date-in-metadata": {
+    "metadata": true
+  }
+}
