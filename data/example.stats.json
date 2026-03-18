@@ -4,14 +4,36 @@
     "text2": "world!"
   },
   "length": {
-    "text1": 170,
-    "text2": 170
+    "text1": 344,
+    "text2": 316
   },
   "alphanumeric": {
-    "text2": 134,
-    "text1": 133
+    "text1": 268,
+    "text2": 247
   },
   "with-date-in-metadata": {
     "metadata": true
+  },
+  "vaca-ratio": {
+    "text1": {
+      "micro": {
+        "va": 0.5,
+        "ca": 0.5
+      },
+      "macro": {
+        "va": 0.038461538461538464,
+        "ca": 0.038461538461538464
+      }
+    },
+    "text2": {
+      "micro": {
+        "va": 0.0,
+        "ca": 0.0
+      },
+      "macro": {
+        "va": 0.0,
+        "ca": 0.0
+      }
+    }
   }
 }
