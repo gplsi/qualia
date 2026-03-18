@@ -178,3 +178,23 @@ class TokenCountMetric(BaseMetric):
                 continue
             total_tokens += self._count_tokens(str(v))
         return total_tokens
+
+
+class VocabularySizeMetric(BaseMetric):
+    """Counts the number of distinct whitespace-delimited tokens in text fields."""
+
+    @property
+    def name(self) -> str:
+        return "vocabulary-size"
+
+    @property
+    def target_types(self) -> List[str]:
+        return ["text"]
+
+    def compute(self, values: Iterable[Any]) -> Any:
+        vocab = set()
+        for v in values:
+            if v is None:
+                continue
+            vocab.update(str(v).split())
+        return len(vocab)

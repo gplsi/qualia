@@ -39,5 +39,9 @@
   "token-count": {
     "text1": 131,
     "text2": 83
+  },
+  "vocabulary-size": {
+    "text1": 51,
+    "text2": 48
   }
 }
