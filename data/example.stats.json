@@ -1,15 +1,21 @@
 {
   "hello": {
     "text1": "world!",
-    "text2": "world!"
+    "text2": "world!",
+    "text4": "world!",
+    "text3": "world!"
   },
   "length": {
     "text1": 344,
-    "text2": 316
+    "text2": 316,
+    "text3": 195,
+    "text4": 273
   },
   "alphanumeric": {
     "text1": 268,
-    "text2": 247
+    "text2": 247,
+    "text3": 156,
+    "text4": 208
   },
   "with-date-in-metadata": {
     "metadata": true
@@ -34,14 +40,44 @@
         "va": 0.0,
         "ca": 0.0
       }
+    },
+    "text3": {
+      "micro": {
+        "va": 0.0,
+        "ca": 0.0
+      },
+      "macro": {
+        "va": 0.0,
+        "ca": 0.0
+      }
+    },
+    "text4": {
+      "micro": {
+        "va": 0.0,
+        "ca": 0.0
+      },
+      "macro": {
+        "va": 0.0,
+        "ca": 0.0
+      }
     }
   },
   "token-count": {
     "text1": 131,
-    "text2": 83
+    "text2": 83,
+    "text3": 52,
+    "text4": 91
   },
   "vocabulary-size": {
     "text1": 51,
-    "text2": 48
+    "text2": 48,
+    "text3": 3,
+    "text4": 3
+  },
+  "semantic-diversity": {
+    "text1": 0.518449991941452,
+    "text2": 0.9192670658230782,
+    "text3": 1.1920928955078125e-07,
+    "text4": 0.0
   }
 }

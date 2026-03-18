@@ -12,6 +12,7 @@ from quality.metrics import (
     VACARatioMetric,
     TokenCountMetric,
     VocabularySizeMetric,
+    SemanticDiversityMetric,
 )
 from quality.core import process_metric_task, get_all_keys_from_file
 
@@ -53,6 +54,7 @@ def main():
         VACARatioMetric(),
         TokenCountMetric(),
         VocabularySizeMetric(),
+        SemanticDiversityMetric(),
     ]
 
     # Map metrics to their target keys

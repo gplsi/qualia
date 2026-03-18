@@ -1,13 +1,13 @@
-{"text1": "Hola, ¿cómo estás?", "text2": "Hello, how are you?", "metadata": {"date": "2024-06-01"}}
-{"text1": "¿Qué hora es?", "text2": "What time is it?", "metadata": {"date": "2024-06-02"}}
-{"text1": "Me gusta el café.", "text2": "I like coffee.", "metadata": {"date": "2024-06-03"}}
-{"text1": "¿Dónde está el baño?", "text2": "Where is the bathroom?", "metadata": {"date": "2024-06-04"}}
-{"text1": "¡Feliz cumpleaños!", "text2": "Happy birthday!", "metadata": {"date": "2024-06-05"}}
-{"text1": "¿Puedes ayudarme?", "text2": "Can you help me?", "metadata": {"date": "2024-06-06"}}
-{"text1": "¿Cuál es tu nombre?", "text2": "What is your name?", "metadata": {"date": "2024-06-07"}}
-{"text1": "Estoy aprendiendo español.", "text2": "I am learning Spanish.", "metadata": {"date": "2024-06-08"}}
-{"text1": "¿Dónde vives?", "text2": "Where do you live?", "metadata": {"date": "2024-06-09"}}
-{"text1": "¡Gracias!", "text2": "Thank you!", "metadata": {"date": "2024-06-10"}}
-{"text1": "Tota la seva obra està escrita amb llatí. Tota la seua obra està escrita amb llatí.", "text2": "All of his work is written in Latin. All of his work is written in Latin.", "metadata": {"date": "2024-06-11"}}
-{"text1": "Aquesta unió va durar fins a la mort de l'artista.", "text2": "This union lasted until the artist's death.", "metadata": {"date": "2024-06-12"}}
-{"text1": "El seu fill va morir a l'edat de 16 anys.", "text2": "His son died at the age of 16.", "metadata": {"date": "2024-06-13"}}
+{"text1": "Hola, ¿cómo estás?", "text2": "Hello, how are you?", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-01"}}
+{"text1": "¿Qué hora es?", "text2": "What time is it?", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-02"}}
+{"text1": "Me gusta el café.", "text2": "I like coffee.", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-03"}}
+{"text1": "¿Dónde está el baño?", "text2": "Where is the bathroom?", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-04"}}
+{"text1": "¡Feliz cumpleaños!", "text2": "Happy birthday!", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-05"}}
+{"text1": "¿Puedes ayudarme?", "text2": "Can you help me?", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-06"}}
+{"text1": "¿Cuál es tu nombre?", "text2": "What is your name?", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-07"}}
+{"text1": "Estoy aprendiendo español.", "text2": "I am learning Spanish.", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-08"}}
+{"text1": "¿Dónde vives?", "text2": "Where do you live?", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-09"}}
+{"text1": "¡Gracias!", "text2": "Thank you!", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-10"}}
+{"text1": "Tota la seva obra està escrita amb llatí. Tota la seua obra està escrita amb llatí.", "text2": "All of his work is written in Latin. All of his work is written in Latin.", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-11"}}
+{"text1": "Aquesta unió va durar fins a la mort de l'artista.", "text2": "This union lasted until the artist's death.", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-12"}}
+{"text1": "El seu fill va morir a l'edat de 16 anys.", "text2": "His son died at the age of 16.", "text3": "El mismo texto.", "text4": "Un texto. Otro texto.", "metadata": {"date": "2024-06-13"}}
