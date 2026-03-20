@@ -119,5 +119,35 @@
       "2012": 1,
       "2010": 1
     }
+  },
+  "gender-bias": {
+    "text1": {
+      "female-count": 0,
+      "male-count": 1,
+      "ratio": "inf",
+      "female-percent": 0.0,
+      "male-percent": 100.0
+    },
+    "text2": {
+      "female-count": 0,
+      "male-count": 0,
+      "ratio": 1.0,
+      "female-percent": 0,
+      "male-percent": 0
+    },
+    "text3": {
+      "female-count": 0,
+      "male-count": 0,
+      "ratio": 1.0,
+      "female-percent": 0,
+      "male-percent": 0
+    },
+    "text4": {
+      "female-count": 0,
+      "male-count": 0,
+      "ratio": 1.0,
+      "female-percent": 0,
+      "male-percent": 0
+    }
   }
 }

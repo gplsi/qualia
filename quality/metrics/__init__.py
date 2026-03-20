@@ -9,3 +9,4 @@ from .semantic import (
     InnerOuterDiversityMetric,
 )
 from .duplication import MinhashDuplicationMetric
+from .bias import GenderBiasMetric
