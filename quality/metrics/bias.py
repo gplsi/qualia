@@ -30,8 +30,11 @@ class GenderBiasMetric(BaseMetric):
         self._tokenizer = re.compile(r"\b\w+\b")
 
         # Load vocabularies into sets for O(1) lookups
-        self.female_words = self._load_vocabulary("female.csv")
-        self.male_words = self._load_vocabulary("male.csv")
+        # Use uppercase for case-sensitive and lowercase for case-insensitive vocabularies
+        self.ci_female_words = self._load_vocabulary("female.csv")
+        self.cs_female_words = self._load_vocabulary("FEMALE.csv")
+        self.ci_male_words = self._load_vocabulary("male.csv")
+        self.cs_male_words = self._load_vocabulary("MALE.csv")
 
     def _load_vocabulary(self, filename: str) -> Set[str]:
         """Reads CSV files across the configured subdirectories and builds a set of words."""
@@ -45,8 +48,6 @@ class GenderBiasMetric(BaseMetric):
                         word = line.strip().lower()
                         if word:  # Skip empty lines if there are any
                             vocab.add(word)
-            else:
-                print(f"Warning: Word list not found at {file_path}")
         return vocab
 
     @property
@@ -65,11 +66,14 @@ class GenderBiasMetric(BaseMetric):
             if not isinstance(val, str):
                 continue
 
-            tokens = self._tokenizer.findall(val.lower())
+            tokens = self._tokenizer.findall(val)
             for token in tokens:
-                if token in self.female_words:
+                if (
+                    token.lower() in self.ci_female_words
+                    or token in self.cs_female_words
+                ):
                     female_count += 1
-                if token in self.male_words:
+                if token.lower() in self.ci_male_words or token in self.cs_male_words:
                     male_count += 1
 
         if female_count == 0 and male_count == 0:
