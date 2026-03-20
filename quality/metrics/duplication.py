@@ -1,3 +1,6 @@
+import math
+import mmh3
+import random
 from typing import Iterable, Any, List
 
 from quality.metrics.base import BaseMetric
@@ -42,7 +45,6 @@ class MinhashDuplicationMetric(BaseMetric):
 
     def _make_hash_params(self):
         """Pre-generate (a, b, mod) tuples for simple universal hashes."""
-        import random
 
         rng = random.Random(self._seed)
         # large prime > typical 32-bit range
@@ -68,7 +70,6 @@ class MinhashDuplicationMetric(BaseMetric):
 
     def _minhash_signature(self, text: str):
         """Compute MinHash signature (list[int]) for one text."""
-        import mmh3  # requires python-mmh3 or similar library
 
         # Initialize with +inf
         sig = [2**63 - 1] * self._num_hashes
@@ -94,7 +95,6 @@ class MinhashDuplicationMetric(BaseMetric):
 
     def compute(self, values: Iterable[Any]) -> Any:
         """Stream over values, maintain global MinHash, and aggregate similarity."""
-        import math
 
         global_sig = None  # MinHash over union of all seen items
         sims = []
