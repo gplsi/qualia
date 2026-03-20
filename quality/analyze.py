@@ -15,6 +15,7 @@ from quality.metrics import (
     StochasticDiversityMetric,
     InnerOuterDiversityMetric,
     MinhashDuplicationMetric,
+    MetadataYearCountMetric,
 )
 from quality.core import process_metric_task, get_all_keys_from_file
 
@@ -59,6 +60,7 @@ def main():
         StochasticDiversityMetric(),
         InnerOuterDiversityMetric(),
         MinhashDuplicationMetric(),
+        MetadataYearCountMetric(),
     ]
 
     # Map metrics to their target keys
