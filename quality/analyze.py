@@ -14,6 +14,7 @@ from quality.metrics import (
     VocabularySizeMetric,
     StochasticDiversityMetric,
     InnerOuterDiversityMetric,
+    MinhashDuplicationMetric,
 )
 from quality.core import process_metric_task, get_all_keys_from_file
 
@@ -57,6 +58,7 @@ def main():
         VocabularySizeMetric(),
         StochasticDiversityMetric(),
         InnerOuterDiversityMetric(),
+        MinhashDuplicationMetric(),
     ]
 
     # Map metrics to their target keys
