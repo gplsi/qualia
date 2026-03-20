@@ -34,6 +34,11 @@ def main():
         default=[],
         help="Keys categorized as metadata",
     )
+    parser.add_argument(
+        "--develop",
+        action="store_true",
+        help="Enable develop mode (exceptions are not handled)",
+    )
     args = parser.parse_args()
 
     # Determine key categorizations
@@ -75,16 +80,36 @@ def main():
 
     # Using ProcessPoolExecutor to bypass the GIL for CPU-bound tasks
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = [
-            executor.submit(process_metric_task, metric, args.input_file, key)
+        futures = {
+            executor.submit(process_metric_task, metric, args.input_file, key): (
+                metric,
+                key,
+            )
             for metric, key in tasks
-        ]
+        }
 
         for future in concurrent.futures.as_completed(futures):
-            metric_name, key, result = future.result()
-            if metric_name not in results_dict:
-                results_dict[metric_name] = {}
-            results_dict[metric_name][key] = result
+            metric, key = futures[future]
+            metric_name = getattr(metric, "name", "unknown_metric")
+
+            try:
+                metric_name, key, result = future.result()
+                if metric_name not in results_dict:
+                    results_dict[metric_name] = {}
+                results_dict[metric_name][key] = result
+            except Exception as e:
+                # On failure, record the error instead of breaking
+                if metric_name not in results_dict:
+                    results_dict[metric_name] = {}
+                key_for_error = key or "unknown_job"
+
+                if args.develop:
+                    # In develop mode, let exceptions propagate
+                    raise RuntimeError(
+                        f"Error processing metric '{metric_name}' for key '{key_for_error}': {e}"
+                    ) from e
+
+                results_dict[metric_name][key_for_error] = {"error": str(e)}
 
     # Format the final output structure matching the order of registered metrics
     final_output = {
