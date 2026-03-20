@@ -77,25 +77,140 @@ class AlphanumericMetric(BaseMetric):
         )
 
 
-class DateInMetadataMetric(BaseMetric):
+class MetadataKeywordGroupsMetric(BaseMetric):
+    """Generic metric for checking groups of metadata keywords.
+
+    For each configured group, it returns True iff:
+      - at least one value was seen, and
+      - every non-empty value contained at least one of that group's keywords.
+
+    Result format:
+      {
+        "<group_name>": bool,
+        ...
+      }
+    """
+
+    def __init__(self, groups: dict[str, List[str]] | None = None) -> None:
+        """If `groups` is None, use the default metadata keyword groups."""
+        if groups is None:
+            groups = self.default_groups()
+        # normalize keywords to lowercase
+        self._groups: dict[str, List[str]] = {
+            gname: [k.lower() for k in keywords] for gname, keywords in groups.items()
+        }
+
+    @staticmethod
+    def default_groups() -> dict[str, List[str]]:
+        """Return a default set of metadata keyword groups.
+
+        These are aimed at common fields like dates, source, author, etc.
+        """
+        return {
+            "date": [
+                "date",
+                "fecha",
+                "jahr",
+                "année",
+                "data",
+                "published",
+                "publication",
+                "created",
+                "modified",
+                "updated",
+                "timestamp",
+                "time",
+                "year",
+            ],
+            "source": [
+                "source",
+                "origen",
+                "quelle",
+                "origine",
+                "provenance",
+                "provider",
+                "publisher",
+                "journal",
+                "magazine",
+                "newspaper",
+                "website",
+                "url",
+                "link",
+                "doi",
+            ],
+            "author": [
+                "author",
+                "autores",
+                "creator",
+                "created by",
+                "byline",
+                "editor",
+                "contributor",
+                "writer",
+                "researcher",
+            ],
+            "language": [
+                "language",
+                "lang",
+                "idioma",
+                "sprache",
+                "langue",
+                "locale",
+                "iso639",
+            ],
+            "license": [
+                "license",
+                "licencia",
+                "lizenz",
+                "licence",
+                "copyright",
+                "usage",
+                "rights",
+                "cc-by",
+                "cc0",
+                "public domain",
+                "permission",
+            ],
+        }
+
     @property
     def name(self) -> str:
-        return "with-date-in-metadata"
+        # Generic base; concrete subclasses should override
+        return "metadata-keyword-groups"
 
     @property
     def target_types(self) -> List[str]:
         return ["metadata"]
 
     def compute(self, values: Iterable[Any]) -> Any:
-        not_empty = False
+        # Track:
+        #   - whether we saw any non-empty value at all
+        #   - for each group, whether ALL seen values matched that group
+        seen_any = False
+        group_all_true: dict[str, bool] = {g: True for g in self._groups}
+
         for value in values:
-            not_empty = True
-            if not any(
-                keyword in str(value).lower()
-                for keyword in ["date", "timestamp", "datetime"]
-            ):
-                return False
-        return not_empty
+            if value is None:
+                continue
+            text = str(value).strip()
+            if not text:
+                continue
+
+            seen_any = True
+            lower_text = text.lower()
+
+            for gname, keywords in self._groups.items():
+                if not group_all_true[gname]:
+                    # already known to be False, no need to re-check
+                    continue
+                if not any(kw in lower_text for kw in keywords):
+                    group_all_true[gname] = False
+
+        if not seen_any:
+            # No data: all groups are False
+            return {g: False for g in self._groups}
+
+        return group_all_true
 
 
 class VACARatioMetric(BaseMetric):

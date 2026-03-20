@@ -17,8 +17,14 @@
     "text3": 312,
     "text4": 208
   },
-  "with-date-in-metadata": {
-    "metadata": true
+  "metadata-keyword-groups": {
+    "metadata": {
+      "date": true,
+      "source": false,
+      "author": false,
+      "language": false,
+      "license": false
+    }
   },
   "vaca-ratio": {
     "text1": {
