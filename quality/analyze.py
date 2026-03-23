@@ -2,8 +2,10 @@ import argparse
 import json
 import os
 import concurrent.futures
-from typing import Any, Dict
 import datasets
+
+from typing import Any, Dict
+from tqdm import tqdm
 
 from quality.metrics import (
     HelloMetric,
@@ -31,17 +33,20 @@ def fetch_huggingface_dataset(dataset_name: str, cache_dir: str) -> str:
     if os.path.exists(dataset_file):
         print(f"Dataset already cached at {dataset_file}")
         return dataset_file
-    
+
     dataset = datasets.load_dataset(dataset_name, split="train", cache_dir=cache_dir)
     os.makedirs(local_path, exist_ok=True)
     dataset.to_json(dataset_file)
     return dataset_file
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Analyze JSONL files using an extensible framework."
     )
-    parser.add_argument("input_file", help="Path to the JSONL input file or Hugging Face dataset name")
+    parser.add_argument(
+        "input_file", help="Path to the JSONL input file or Hugging Face dataset name"
+    )
     parser.add_argument(
         "--input-type",
         choices=["local", "huggingface"],
@@ -117,7 +122,11 @@ def main():
             for metric, key in tasks
         }
 
-        for future in concurrent.futures.as_completed(futures):
+        for future in tqdm(
+            concurrent.futures.as_completed(futures),
+            total=len(futures),
+            desc="Processing tasks",
+        ):
             metric, key = futures[future]
             metric_name = getattr(metric, "name", "unknown_metric")
 
@@ -140,17 +149,15 @@ def main():
 
                 results_dict[metric_name][key_for_error] = {"error": str(e)}
 
-    # Format the final output structure matching the order of registered metrics
-    final_output = {
-        metric.name: results_dict.get(metric.name, {}) for metric in registered_metrics
-    }
-
-    # Determine output file name (.stats.json suffix)
-    base_path, ext = os.path.splitext(args.input_file)
-    output_filename = f"{base_path}.stats.json"
-
-    with open(output_filename, "w", encoding="utf-8") as f:
-        json.dump(final_output, f, indent=2)
+            # Dump results to the output file after each job finishes
+            final_output = {
+                metric.name: results_dict.get(metric.name, {})
+                for metric in registered_metrics
+            }
+            base_path, ext = os.path.splitext(args.input_file)
+            output_filename = f"{base_path}.stats.json"
+            with open(output_filename, "w", encoding="utf-8") as f:
+                json.dump(final_output, f, indent=2)
 
     print(f"Analysis complete. Results written to {output_filename}")
 
