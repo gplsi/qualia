@@ -3,6 +3,7 @@ import json
 import os
 import concurrent.futures
 from typing import Any, Dict
+import datasets
 
 from quality.metrics import (
     HelloMetric,
@@ -21,11 +22,25 @@ from quality.metrics import (
 from quality.core import process_metric_task, get_all_keys_from_file
 
 
+def fetch_huggingface_dataset(dataset_name: str, cache_dir: str) -> str:
+    """Fetch a Hugging Face dataset and return the local path."""
+    dataset = datasets.load_dataset(dataset_name, split="train", cache_dir=cache_dir)
+    local_path = os.path.join(cache_dir, dataset_name)
+    os.makedirs(local_path, exist_ok=True)
+    dataset.to_json(os.path.join(local_path, "data.jsonl"))
+    return os.path.join(local_path, "data.jsonl")
+
 def main():
     parser = argparse.ArgumentParser(
         description="Analyze JSONL files using an extensible framework."
     )
-    parser.add_argument("input_file", help="Path to the JSONL input file")
+    parser.add_argument("input_file", help="Path to the JSONL input file or Hugging Face dataset name")
+    parser.add_argument(
+        "--input-type",
+        choices=["local", "huggingface"],
+        default="local",
+        help="Specify the input type (default: local path)",
+    )
     parser.add_argument(
         "--text-keys", action="append", default=[], help="Keys categorized as text"
     )
@@ -41,6 +56,11 @@ def main():
         help="Enable develop mode (exceptions are not handled)",
     )
     args = parser.parse_args()
+
+    # Handle input type
+    if args.input_type == "huggingface":
+        cache_dir = os.path.join("data", ".cache")
+        args.input_file = fetch_huggingface_dataset(args.input_file, cache_dir)
 
     # Determine key categorizations
     all_file_keys = get_all_keys_from_file(args.input_file)
