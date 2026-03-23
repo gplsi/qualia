@@ -24,11 +24,18 @@ from quality.core import process_metric_task, get_all_keys_from_file
 
 def fetch_huggingface_dataset(dataset_name: str, cache_dir: str) -> str:
     """Fetch a Hugging Face dataset and return the local path."""
-    dataset = datasets.load_dataset(dataset_name, split="train", cache_dir=cache_dir)
     local_path = os.path.join(cache_dir, dataset_name)
+    dataset_file = os.path.join(local_path, "data.jsonl")
+
+    # Check if the dataset already exists in the cache
+    if os.path.exists(dataset_file):
+        print(f"Dataset already cached at {dataset_file}")
+        return dataset_file
+    
+    dataset = datasets.load_dataset(dataset_name, split="train", cache_dir=cache_dir)
     os.makedirs(local_path, exist_ok=True)
-    dataset.to_json(os.path.join(local_path, "data.jsonl"))
-    return os.path.join(local_path, "data.jsonl")
+    dataset.to_json(dataset_file)
+    return dataset_file
 
 def main():
     parser = argparse.ArgumentParser(
