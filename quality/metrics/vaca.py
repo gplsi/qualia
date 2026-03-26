@@ -15,12 +15,30 @@ class VACARatioMetric(BaseMetric):
         return ["text"]
 
     def compute(self, values: Iterable[Any]) -> Any:
-
         discriminator = VACADiscriminator.load()
 
-        all_counts = [
-            discriminator.get_counts(value) for value in values if value is not None
-        ]
+        all_counts = []
+        error_count = 0
+        total_items = 0
+        errors = set()
+
+        for value in values:
+            if value is None:
+                continue
+
+            total_items += 1
+            try:
+                all_counts.append(discriminator.get_counts(value))
+            except Exception as e:
+                error_count += 1
+                errors.add(str(e))
+
+        if error_count > 0:
+            print(
+                "[Warning @ VACARatioMetric]:"
+                f"Encountered {error_count} errors while processing {total_items} items."
+                f"Errors: {', '.join(errors)}"
+            )
 
         ratios = []
         all_va_count = 0
