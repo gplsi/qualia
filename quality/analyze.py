@@ -67,12 +67,41 @@ def main():
         action="store_true",
         help="Enable develop mode (exceptions are not handled)",
     )
+    parser.add_argument(
+        "--update",
+        action="append",
+        default=[],
+        help="Metric names to recompute. Requires an existing .stats.json file.",
+    )
     args = parser.parse_args()
 
     # Handle input type
     if args.input_type == "huggingface":
         cache_dir = os.path.join("data", ".cache")
         args.input_file = fetch_huggingface_dataset(args.input_file, cache_dir)
+
+    # Compute output filename and handle existing data/errors
+    base_path, _ = os.path.splitext(args.input_file)
+    output_filename = f"{base_path}.stats.json"
+    results_dict: Dict[str, Dict[str, Any]] = {}
+
+    if args.update:
+        if not os.path.exists(output_filename):
+            raise FileNotFoundError(
+                f"Output file {output_filename} not found. "
+                "The --update option requires an existing output file."
+            )
+
+        with open(output_filename, "r", encoding="utf-8") as f:
+            results_dict = json.load(f)
+
+        # Verify requested metrics exist in the current output
+        for metric_to_update in args.update:
+            if metric_to_update not in results_dict:
+                raise KeyError(
+                    f"Metric '{metric_to_update}' not found in existing results. "
+                    f"Available metrics: {list(results_dict.keys())}"
+                )
 
     # Determine key categorizations
     all_file_keys = get_all_keys_from_file(args.input_file)
@@ -105,12 +134,17 @@ def main():
     # Map metrics to their target keys
     tasks = []
     for metric in registered_metrics:
+        # Only schedule if updating specific metrics, otherwise schedule all
+        if args.update and metric.name not in args.update:
+            continue
+
         for key, ktype in key_types.items():
             if ktype in metric.target_types or "all" in metric.target_types:
                 tasks.append((metric, key))
 
-    # Execute tasks in parallel
-    results_dict: Dict[str, Dict[str, Any]] = {}
+    if not tasks:
+        print("No tasks to process. Check your --update names or key configurations.")
+        return
 
     # Using ThreadPoolExecutor for GPU compatibility
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -150,14 +184,8 @@ def main():
                 results_dict[metric_name][key_for_error] = {"error": str(e)}
 
             # Dump results to the output file after each job finishes
-            final_output = {
-                metric.name: results_dict.get(metric.name, {})
-                for metric in registered_metrics
-            }
-            base_path, ext = os.path.splitext(args.input_file)
-            output_filename = f"{base_path}.stats.json"
             with open(output_filename, "w", encoding="utf-8") as f:
-                json.dump(final_output, f, indent=2)
+                json.dump(results_dict, f, indent=2)
 
     print(f"Analysis complete. Results written to {output_filename}")
 
