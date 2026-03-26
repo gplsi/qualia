@@ -112,8 +112,8 @@ def main():
     # Execute tasks in parallel
     results_dict: Dict[str, Dict[str, Any]] = {}
 
-    # Using ProcessPoolExecutor to bypass the GIL for CPU-bound tasks
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    # Using ThreadPoolExecutor for GPU compatibility
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(process_metric_task, metric, args.input_file, key): (
                 metric,
