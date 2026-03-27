@@ -170,7 +170,7 @@ class MetadataYearCountMetric(BaseMetric):
         # Regex for ranges: 1990-1993, 1990–1993, etc.
         # Captures: century, start_suffix, 4-digit end_year
         self._range_re = re.compile(
-            r"\b(18|19|20)(\d{2})\s*[-/\u2013\u2014]\s*(\d{4})\b"
+            r"\b((?:18|19|20)\d{2})\s*[-/\u2013\u2014]\s*((?:18|19|20)\d{2})\b"
         )
 
         # Common date-like keys in metadata dicts
@@ -230,11 +230,10 @@ class MetadataYearCountMetric(BaseMetric):
 
         # 1) Ranges first (requires 4 digits on both sides)
         for m in self._range_re.finditer(text):
-            century = m.group(1)  # e.g., "19"
-            start_suffix = m.group(2)  # e.g., "90"
-            end_part = m.group(3)  # e.g., "1993"
+            start_part = m.group(1)
+            end_part = m.group(2)
 
-            start_year = int(century + start_suffix)
+            start_year = int(start_part)
             end_year = int(end_part)
 
             # If they are typed backward (e.g., 1993-1990), swap them
