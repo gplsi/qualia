@@ -1,0 +1,3 @@
+[submodule "vendor/disvaca"]
+	path = vendor/disvaca
+	url = https://github.com/gplsi/disvaca.git
