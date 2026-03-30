@@ -1,6 +1,6 @@
-# Dataset Quality Metrics Toolkit
+# Qualia - Quality for Language & AI Toolkit
 
-A small, extensible toolkit to compute dataset quality metrics over JSONL text corpora or Hugging Face datasets. It streams over your data and writes aggregated statistics (length, token counts, semantic diversity, duplication, metadata coverage, gender bias, etc.) into a single `<input>.stats.json` file.
+Qualia is a small, extensible toolkit to compute dataset quality metrics over JSONL text corpora or Hugging Face datasets. It streams over your data and writes aggregated statistics (length, token counts, semantic diversity, duplication, metadata coverage, gender bias, etc.) into a single `<input>.stats.json` file.
 
 ## Why this project is useful
 
