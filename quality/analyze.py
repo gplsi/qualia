@@ -76,6 +76,15 @@ def main():
         default=[],
         help="Metric names to recompute. Requires an existing .stats.json file.",
     )
+    parser.add_argument(
+        "--metric",
+        action="append",
+        default=[],
+        help=(
+            "Metric name to run. Can be passed multiple times to run only selected metrics. "
+            "Defaults to all registered metrics."
+        ),
+    )
     args = parser.parse_args()
 
     # Handle input type
@@ -137,6 +146,20 @@ def main():
         MTLDMetric(),
     ]
 
+    if args.metric:
+        available_metrics = {metric.name: metric for metric in registered_metrics}
+        invalid_metrics = [
+            name for name in args.metric if name not in available_metrics
+        ]
+        if invalid_metrics:
+            raise KeyError(
+                f"Unknown metric name(s): {invalid_metrics}. "
+                f"Available metrics: {list(available_metrics.keys())}"
+            )
+
+        selected_metric_names = list(dict.fromkeys(args.metric))
+        registered_metrics = [available_metrics[name] for name in selected_metric_names]
+
     # Map metrics to their target keys
     tasks = []
     for metric in registered_metrics:
@@ -149,7 +172,9 @@ def main():
                 tasks.append((metric, key))
 
     if not tasks:
-        print("No tasks to process. Check your --update names or key configurations.")
+        print(
+            "No tasks to process. Check your --metric/--update names or key configurations."
+        )
         return
 
     # Using ThreadPoolExecutor for GPU compatibility
