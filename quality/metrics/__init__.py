@@ -10,3 +10,4 @@ from .semantic import (
 )
 from .duplication import MinhashDuplicationMetric
 from .bias import GenderBiasMetric
+from .lexical import STTRMetric, MTLDMetric

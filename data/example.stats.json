@@ -17,6 +17,13 @@
     "text3": 312,
     "text4": 208
   },
+  "num-documents": {
+    "text4": 13,
+    "text1": 13,
+    "text2": 13,
+    "metadata": 13,
+    "text3": 13
+  },
   "metadata-keyword-groups": {
     "metadata": {
       "date": true,
@@ -69,10 +76,42 @@
     }
   },
   "token-count": {
-    "text1": 131,
-    "text2": 83,
-    "text3": 104,
-    "text4": 91
+    "text1": {
+      "total_tokens": 131,
+      "tokens_per_document": {
+        "mean": 10.076923076923077,
+        "stdev": 7.3650247619128715,
+        "min": 4,
+        "max": 30
+      }
+    },
+    "text2": {
+      "total_tokens": 83,
+      "tokens_per_document": {
+        "mean": 6.384615384615385,
+        "stdev": 4.03192389020555,
+        "min": 3,
+        "max": 18
+      }
+    },
+    "text3": {
+      "total_tokens": 104,
+      "tokens_per_document": {
+        "mean": 8,
+        "stdev": 0.0,
+        "min": 8,
+        "max": 8
+      }
+    },
+    "text4": {
+      "total_tokens": 91,
+      "tokens_per_document": {
+        "mean": 7,
+        "stdev": 0.0,
+        "min": 7,
+        "max": 7
+      }
+    }
   },
   "vocabulary-size": {
     "text1": 51,
@@ -149,5 +188,17 @@
       "female-percent": 0,
       "male-percent": 0
     }
+  },
+  "standardised-type-token-ratio": {
+    "text2": 0.6385542168674698,
+    "text3": 0.04807692307692308,
+    "text4": 0.05128205128205128,
+    "text1": 0.6666666666666666
+  },
+  "measure-of-textual-lexical-diversity": {
+    "text1": 12.950769230769229,
+    "text3": 8.0,
+    "text2": 6.384615384615385,
+    "text4": 6.0
   }
 }
