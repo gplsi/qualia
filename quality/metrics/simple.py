@@ -1,4 +1,3 @@
-
 from typing import Iterable, Any, List
 
 from quality.metrics.base import BaseMetric
@@ -46,3 +45,20 @@ class AlphanumericMetric(BaseMetric):
         return sum(
             sum(1 for c in str(v) if c.isalnum()) for v in values if v is not None
         )
+
+
+class NumDocumentsMetric(BaseMetric):
+    @property
+    def name(self) -> str:
+        return "num-documents"
+
+    @property
+    def target_types(self) -> List[str]:
+        return ["all"]
+
+    def compute(self, values: Iterable[Any]) -> Any:
+        count = 0
+        for value in values:
+            if value is not None:
+                count += 1
+        return count
