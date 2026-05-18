@@ -1,5 +1,6 @@
 import tiktoken
 
+from statistics import mean, stdev
 from typing import Iterable, Any, List
 
 from quality.metrics.base import BaseMetric
@@ -30,11 +31,28 @@ class TokenCountMetric(BaseMetric):
 
     def compute(self, values: Iterable[Any]) -> Any:
         total_tokens = 0
+        tokens_per_document = []
         for v in values:
             if v is None:
                 continue
-            total_tokens += self._count_tokens(str(v))
-        return total_tokens
+            token_count = self._count_tokens(str(v))
+            total_tokens += token_count
+            tokens_per_document.append(token_count)
+
+        mean_tokens = mean(tokens_per_document) if tokens_per_document else 0
+        stdev_tokens = stdev(tokens_per_document) if len(tokens_per_document) > 1 else 0
+        min_tokens = min(tokens_per_document) if tokens_per_document else 0
+        max_tokens = max(tokens_per_document) if tokens_per_document else 0
+
+        return {
+            "total_tokens": total_tokens,
+            "tokens_per_document": {
+                "mean": mean_tokens,
+                "stdev": stdev_tokens,
+                "min": min_tokens,
+                "max": max_tokens,
+            },
+        }
 
 
 class VocabularySizeMetric(BaseMetric):
