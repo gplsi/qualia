@@ -78,6 +78,11 @@ def main():
         help="Keys categorized as metadata",
     )
     parser.add_argument(
+        "--ignore-other",
+        action="store_true",
+        help="Skip keys that are not explicitly listed as text or metadata.",
+    )
+    parser.add_argument(
         "--develop",
         action="store_true",
         help="Enable develop mode (exceptions are not handled)",
@@ -209,6 +214,14 @@ def main():
             continue
 
         for key, ktype in key_types.items():
+            if args.ignore_other and ktype == "other":
+                logger.info(
+                    "Skipping key '%s' for metric '%s' because --ignore-other is enabled",
+                    key,
+                    metric.name,
+                )
+                continue
+
             if ktype in metric.target_types or "all" in metric.target_types:
                 tasks.append((metric, key))
                 logger.debug("Scheduled metric '%s' for key '%s'", metric.name, key)
