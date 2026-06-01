@@ -184,6 +184,10 @@ Your metric will then automatically participate in the CLI, including `--update`
 
 The development of this framework has been partially funded by the *Ministerio para la Transformación Digital y de la Función Pública* — Funded by **EU – NextGenerationEU**, within the framework of the project *Desarrollo de Modelos ALIA*.
 
+## Acknowledgments
+
+This toolkit was developed as part of research conducted at the **GPLSI** (Grupo de Procesamiento del Lenguaje y Sistemas de Información) at the **University of Alicante**.
+
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for more details.
