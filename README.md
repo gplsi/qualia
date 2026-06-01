@@ -180,6 +180,10 @@ Your metric will then automatically participate in the CLI, including `--update`
   - Improving documentation and examples.
   - Extending support for additional input formats or metadata conventions.
 
+## Funding
+
+The development of this framework has been partially funded by the *Ministerio para la Transformación Digital y de la Función Pública* — Funded by **EU – NextGenerationEU**, within the framework of the project *Desarrollo de Modelos ALIA*.
+
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
