@@ -1,3 +1,6 @@
 [submodule "vendor/disvaca"]
 	path = vendor/disvaca
 	url = https://github.com/gplsi/disvaca.git
+[submodule "vendor/bfair"]
+	path = vendor/bfair
+	url = https://github.com/bfair-ml/bfair.git
