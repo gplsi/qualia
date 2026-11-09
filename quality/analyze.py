@@ -27,7 +27,6 @@ from quality.metrics import (
 )
 from quality.core import process_metric_task, get_all_keys_from_file
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +52,9 @@ def fetch_huggingface_dataset(dataset_name: str, cache_dir: str) -> str:
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
 
     logger.info("Starting analysis")
     parser = argparse.ArgumentParser(
@@ -94,6 +95,11 @@ def main():
         help="Metric names to recompute. Requires an existing .stats.json file.",
     )
     parser.add_argument(
+        "--or-insert",
+        action="store_true",
+        help="Insert the specified metrics to update into the .stats.json file even if they do not already exist.",
+    )
+    parser.add_argument(
         "--metric",
         action="append",
         default=[],
@@ -106,7 +112,7 @@ def main():
         "--log-level",
         default="WARNING",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level to use (default: INFO).",
+        help="Logging level to use (default: WARNING).",
     )
     args = parser.parse_args()
     logging.getLogger().setLevel(getattr(logging, args.log_level))
@@ -140,7 +146,7 @@ def main():
 
         # Verify requested metrics exist in the current output
         for metric_to_update in args.update:
-            if metric_to_update not in results_dict:
+            if metric_to_update not in results_dict and not args.or_insert:
                 raise KeyError(
                     f"Metric '{metric_to_update}' not found in existing results. "
                     f"Available metrics: {list(results_dict.keys())}"
@@ -253,11 +259,17 @@ def main():
         ):
             metric, key = futures[future]
             metric_name = getattr(metric, "name", "unknown_metric")
-            logger.info("Processing completed task for metric '%s' and key '%s'", metric_name, key)
+            logger.info(
+                "Processing completed task for metric '%s' and key '%s'",
+                metric_name,
+                key,
+            )
 
             try:
                 metric_name, key, result = future.result()
-                logger.info("Task succeeded for metric '%s' and key '%s'", metric_name, key)
+                logger.info(
+                    "Task succeeded for metric '%s' and key '%s'", metric_name, key
+                )
                 if metric_name not in results_dict:
                     results_dict[metric_name] = {}
                 results_dict[metric_name][key] = result
