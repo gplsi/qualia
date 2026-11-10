@@ -9,6 +9,7 @@ from bfair.metrics.lm import (
     InfiniteContext,
     ContinualContext,
     SpanishGenderedWords,
+    ValencianGenderedWords,
 )
 
 from quality.metrics.base import BaseMetric
@@ -117,12 +118,18 @@ class ContextualGenderBiasMetric(BaseMetric):
     GROUP_WORDS = {
         "english": EnglishGenderedWords,
         "spanish": SpanishGenderedWords,
+        "valencian": ValencianGenderedWords,
+        "catalan": ValencianGenderedWords,
     }
     LANGUAGE_ALIASES = {
         "en": "english",
         "eng": "english",
         "es": "spanish",
         "spa": "spanish",
+        "ca": "catalan",
+        "cat": "catalan",
+        "va": "valencian",
+        "val": "valencian",
     }
 
     def __init__(
