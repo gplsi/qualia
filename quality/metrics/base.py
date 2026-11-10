@@ -17,6 +17,10 @@ class BaseMetric(ABC):
         """Column types to process: e.g., 'text', 'metadata', 'all', 'other'."""
         pass
 
+    def for_language(self, language: str) -> "BaseMetric":
+        """Return a metric configured for a language, or self if language-neutral."""
+        return self
+
     @abstractmethod
     def compute(self, values: Iterable[Any]) -> Any:
         """Processes a lazy sequence of values and returns the aggregate result."""

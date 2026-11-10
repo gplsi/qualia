@@ -54,6 +54,18 @@ This command will:
 - Run all registered metrics over the appropriate columns.
 - Write results to `data/example.stats.json`.
 
+By default, metrics are computed over the global corpus and no language key is needed.
+Use `--mode language` to compute separate results for each language, or `--mode both` to
+include global and per-language results. Both modes require `--language-key KEY` to identify the language field in each record.
+In all modes the result shape is `metric -> field -> language`.
+
+```bash
+python -m quality data/example.jsonl \
+  --text-keys text \
+  --language-key language \
+  --mode both
+```
+
 You can inspect `data/example.jsonl` and `data/example.stats.json` in the repository for a concrete input/output example.
 
 ### Using Hugging Face datasets

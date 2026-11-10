@@ -26,7 +26,11 @@ from quality.metrics import (
     STTRMetric,
     MTLDMetric,
 )
-from quality.core import process_metric_task, get_all_keys_from_file
+from quality.core import (
+    process_metric_task,
+    get_all_keys_from_file,
+    get_all_languages_from_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +56,20 @@ def fetch_huggingface_dataset(dataset_name: str, cache_dir: str) -> str:
     return dataset_file
 
 
+def store_result(
+    results: Dict[str, Dict[str, Any]],
+    mode: str,
+    metric_name: str,
+    key: str,
+    language: str | None,
+    result: Any,
+) -> None:
+    metric_results = results.setdefault(metric_name, {})
+    is_global = mode == "global" or (mode == "both" and language is None)
+    scope = "global" if is_global else language or "unspecified"
+    metric_results.setdefault(key, {})[scope] = result
+
+
 def main():
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -69,6 +87,16 @@ def main():
         choices=["local", "huggingface"],
         default="local",
         help="Specify the input type (default: local path)",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["global", "language", "both"],
+        default="global",
+        help="Compute metrics globally, per language, or both (default: global)",
+    )
+    parser.add_argument(
+        "--language-key",
+        help="Record key containing each document's language (required for language/both mode)",
     )
     parser.add_argument(
         "--text-keys", action="append", default=[], help="Keys categorized as text"
@@ -116,6 +144,8 @@ def main():
         help="Logging level to use (default: WARNING).",
     )
     args = parser.parse_args()
+    if args.mode in {"language", "both"} and not args.language_key:
+        parser.error("--language-key is required when --mode is language or both")
     logging.getLogger().setLevel(getattr(logging, args.log_level))
     logger.info("Parsed arguments: %s", args)
     logger.info("Log level set to %s", args.log_level)
@@ -159,6 +189,15 @@ def main():
     all_file_keys = get_all_keys_from_file(args.input_file)
     categorized_keys = set(args.text_keys + args.metadata_keys)
     logger.info("Found %d keys in input file", len(all_file_keys))
+
+    languages = []
+    if args.mode in {"language", "both"}:
+        languages = get_all_languages_from_file(args.input_file, args.language_key)
+        if not languages:
+            raise ValueError(
+                f"No non-empty language values found for key {args.language_key!r}."
+            )
+        logger.info("Found %d languages in input file", len(languages))
 
     key_types = {}
     for k in args.text_keys:
@@ -231,7 +270,11 @@ def main():
                 continue
 
             if ktype in metric.target_types or "all" in metric.target_types:
-                tasks.append((metric, key))
+                if args.mode in {"global", "both"}:
+                    tasks.append((metric, key, None))
+                if args.mode in {"language", "both"}:
+                    for language in languages:
+                        tasks.append((metric.for_language(language), key, language))
                 logger.debug("Scheduled metric '%s' for key '%s'", metric.name, key)
 
     if not tasks:
@@ -246,11 +289,19 @@ def main():
     logger.info("Starting task execution")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
-            executor.submit(process_metric_task, metric, args.input_file, key): (
+            executor.submit(
+                process_metric_task,
+                metric,
+                args.input_file,
+                key,
+                args.language_key,
+                language,
+            ): (
                 metric,
                 key,
+                language,
             )
-            for metric, key in tasks
+            for metric, key, language in tasks
         }
         logger.info("Submitted %d futures", len(futures))
 
@@ -259,7 +310,7 @@ def main():
             total=len(futures),
             desc="Processing tasks",
         ):
-            metric, key = futures[future]
+            metric, key, language = futures[future]
             metric_name = getattr(metric, "name", "unknown_metric")
             logger.info(
                 "Processing completed task for metric '%s' and key '%s'",
@@ -268,20 +319,18 @@ def main():
             )
 
             try:
-                metric_name, key, result = future.result()
+                metric_name, key, language, result = future.result()
                 logger.info(
                     "Task succeeded for metric '%s' and key '%s'", metric_name, key
                 )
-                if metric_name not in results_dict:
-                    results_dict[metric_name] = {}
-                results_dict[metric_name][key] = result
+                store_result(
+                    results_dict, args.mode, metric_name, key, language, result
+                )
             except Exception as e:
                 # On failure, record the error instead of breaking
                 logger.exception(
                     "Task failed for metric '%s' and key '%s'", metric_name, key
                 )
-                if metric_name not in results_dict:
-                    results_dict[metric_name] = {}
                 key_for_error = key or "unknown_job"
 
                 if args.develop:
@@ -290,7 +339,14 @@ def main():
                         f"Error processing metric '{metric_name}' for key '{key_for_error}': {e}"
                     ) from e
 
-                results_dict[metric_name][key_for_error] = {"error": str(e)}
+                store_result(
+                    results_dict,
+                    args.mode,
+                    metric_name,
+                    key_for_error,
+                    language,
+                    {"error": str(e)},
+                )
 
             # Dump results to the output file after each job finishes
             logger.info("Writing intermediate results to %s", output_filename)

@@ -118,15 +118,21 @@ class ContextualGenderBiasMetric(BaseMetric):
         "english": EnglishGenderedWords,
         "spanish": SpanishGenderedWords,
     }
+    LANGUAGE_ALIASES = {
+        "en": "english",
+        "eng": "english",
+        "es": "spanish",
+        "spa": "spanish",
+    }
 
     def __init__(
         self,
-        language: str = "english",
+        language: str = None,
         context: Any = "continuous",
         group_words: Any = None,
         use_root: bool = True,
     ):
-        self.language = language.lower()
+        self.language = language.lower() if language else language
         self.context = context
         self.group_words = group_words
         self.use_root = use_root
@@ -139,6 +145,16 @@ class ContextualGenderBiasMetric(BaseMetric):
     @property
     def target_types(self) -> List[str]:
         return ["text"]
+
+    def for_language(self, language: str) -> "ContextualGenderBiasMetric":
+        language_code = language.strip().lower().replace("_", "-").split("-", 1)[0]
+        configured_language = self.LANGUAGE_ALIASES.get(language_code, language_code)
+        return type(self)(
+            language=configured_language,
+            context=self.context,
+            group_words=self.group_words,
+            use_root=self.use_root,
+        )
 
     def _get_bias_score(self) -> BiasScore:
         if self._bias_score is None:
@@ -173,6 +189,12 @@ class ContextualGenderBiasMetric(BaseMetric):
         return self._bias_score
 
     def compute(self, values: Iterable[Any]) -> Dict[str, Dict[str, float]]:
+        if not self.language:
+            raise ValueError(
+                "Language must be specified for ContextualGenderBiasMetric. "
+                "Use the 'for_language' method to configure the metric."
+            )
+
         texts = [value for value in values if isinstance(value, str)]
         if not texts:
             return {
