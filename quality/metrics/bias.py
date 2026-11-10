@@ -2,6 +2,15 @@ import re
 from pathlib import Path
 from typing import Iterable, Any, List, Set, Dict
 
+from bfair.metrics.lm import (
+    BiasScore,
+    EnglishGenderedWords,
+    FixedContext,
+    InfiniteContext,
+    ContinualContext,
+    SpanishGenderedWords,
+)
+
 from quality.metrics.base import BaseMetric
 
 
@@ -93,4 +102,88 @@ class GenderBiasMetric(BaseMetric):
             "ratio": ratio,
             "female-percent": female_percent,
             "male-percent": male_percent,
+        }
+
+
+class ContextualGenderBiasMetric(BaseMetric):
+    """Compute contextual count-disparity and log-score gender bias metrics."""
+
+    CONTEXTS = {
+        "fixed": FixedContext,
+        "infinite": InfiniteContext,
+        "continual": ContinualContext,
+        "continuous": ContinualContext,
+    }
+    GROUP_WORDS = {
+        "english": EnglishGenderedWords,
+        "spanish": SpanishGenderedWords,
+    }
+
+    def __init__(
+        self,
+        language: str = "english",
+        context: Any = "continuous",
+        group_words: Any = None,
+        use_root: bool = True,
+    ):
+        self.language = language.lower()
+        self.context = context
+        self.group_words = group_words
+        self.use_root = use_root
+        self._bias_score = None
+
+    @property
+    def name(self) -> str:
+        return "contextual-gender-bias"
+
+    @property
+    def target_types(self) -> List[str]:
+        return ["text"]
+
+    def _get_bias_score(self) -> BiasScore:
+        if self._bias_score is None:
+            group_words = self.group_words
+            if group_words is None:
+                try:
+                    group_words = self.GROUP_WORDS[self.language]().get_group_words()
+                except KeyError as error:
+                    raise ValueError(
+                        f"No default gender seed words for {self.language!r}; "
+                        "provide group_words explicitly."
+                    ) from error
+
+            context = self.context
+            if isinstance(context, str):
+                try:
+                    context = self.CONTEXTS[context.lower()]()
+                except KeyError as error:
+                    raise ValueError(
+                        f"Unsupported context {context!r}; "
+                        f"choose from {', '.join(self.CONTEXTS)}."
+                    ) from error
+
+            self._bias_score = BiasScore(
+                language=self.language,
+                group_words=group_words,
+                context=context,
+                scoring_modes=[BiasScore.S_RATIO, BiasScore.S_LOG],
+                use_root=self.use_root,
+                semantic_check=False,
+            )
+        return self._bias_score
+
+    def compute(self, values: Iterable[Any]) -> Dict[str, Dict[str, float]]:
+        texts = [value for value in values if isinstance(value, str)]
+        if not texts:
+            return {
+                mode: {"mean": 0.0, "stdev": 0.0}
+                for mode in (BiasScore.S_RATIO, BiasScore.S_LOG)
+            }
+
+        bias_score = self._get_bias_score()
+        bias_score.group_words.reset_context()
+        scores, _ = bias_score(texts)
+        return {
+            mode: {"mean": float(scores[mode][0]), "stdev": float(scores[mode][1])}
+            for mode in (BiasScore.S_RATIO, BiasScore.S_LOG)
         }

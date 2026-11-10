@@ -21,6 +21,7 @@ from quality.metrics import (
     InnerOuterDiversityMetric,
     MinhashDuplicationMetric,
     MetadataYearCountMetric,
+    ContextualGenderBiasMetric,
     GenderBiasMetric,
     STTRMetric,
     MTLDMetric,
@@ -189,6 +190,7 @@ def main():
         MinhashDuplicationMetric(),
         MetadataYearCountMetric(),
         GenderBiasMetric(),
+        ContextualGenderBiasMetric(),
         STTRMetric(),
         MTLDMetric(),
     ]
