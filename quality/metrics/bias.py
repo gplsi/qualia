@@ -1,6 +1,5 @@
 import re
-from pathlib import Path
-from typing import Iterable, Any, List, Set, Dict
+from typing import Iterable, Any, List, Dict
 
 from bfair.metrics.lm import (
     BiasScore,
@@ -15,60 +14,102 @@ from bfair.metrics.lm import (
 from quality.metrics.base import BaseMetric
 
 
-class GenderBiasMetric(BaseMetric):
-    """
-    Computes gender bias by counting occurrences of male and female-related words
-    and returning their counts along with the female-to-male ratio.
-    """
+class BaseGenderBiasMetric(BaseMetric):
+    GROUP_WORDS = {
+        "english": EnglishGenderedWords,
+        "spanish": SpanishGenderedWords,
+        "valencian": ValencianGenderedWords,
+        "catalan": ValencianGenderedWords,
+    }
+    LANGUAGE_ALIASES = {
+        "en": "english",
+        "eng": "english",
+        "es": "spanish",
+        "spa": "spanish",
+        "ca": "catalan",
+        "cat": "catalan",
+        "va": "valencian",
+        "val": "valencian",
+    }
 
-    def __init__(self, base_dir: str = "data/gender_bias", sub_dirs: List[str] = None):
-        """
-        Initializes the metric and pre-loads the vocabularies.
-
-        Args:
-            base_dir: The root directory for the gender bias data.
-            sub_dirs: List of subdirectories to check for 'female.csv' and 'male.csv'.
-        """
-        self.base_dir = Path(base_dir)
-        self.sub_dirs = (
-            sub_dirs
-            if sub_dirs is not None
-            else [dir.name for dir in self.base_dir.iterdir() if dir.is_dir()]
-        )
-
-        # Pre-compile regex for fast tokenization
+    def __init__(self, language: str = None, group_words: Any = None):
+        self.language = language.lower() if language else language
+        self.group_words = group_words
         self._tokenizer = re.compile(r"\b\w+\b")
-
-        # Load vocabularies into sets for O(1) lookups
-        # Use uppercase for case-sensitive and lowercase for case-insensitive vocabularies
-        self.ci_female_words = self._load_vocabulary("female.csv")
-        self.cs_female_words = self._load_vocabulary("FEMALE.csv")
-        self.ci_male_words = self._load_vocabulary("male.csv")
-        self.cs_male_words = self._load_vocabulary("MALE.csv")
-
-    def _load_vocabulary(self, filename: str) -> Set[str]:
-        """Reads CSV files across the configured subdirectories and builds a set of words."""
-        vocab = set()
-        for sub_dir in self.sub_dirs:
-            file_path = self.base_dir / sub_dir / filename
-            if file_path.is_file():
-                with open(file_path, "r", encoding="utf-8") as f:
-                    # Read line by line, clean whitespace, and convert to lowercase
-                    for line in f:
-                        word = line.strip().lower()
-                        if word:  # Skip empty lines if there are any
-                            vocab.add(word)
-        return vocab
-
-    @property
-    def name(self) -> str:
-        return "gender-bias"
+        self._group_words_cache = None
+        self._male_words = None
+        self._female_words = None
 
     @property
     def target_types(self) -> List[str]:
         return ["text"]
 
+    def _language_options(self) -> Dict[str, Any]:
+        return {}
+
+    def for_language(self, language: str) -> "BaseGenderBiasMetric":
+        language_code = language.strip().lower().replace("_", "-").split("-", 1)[0]
+        configured_language = self.LANGUAGE_ALIASES.get(language_code, language_code)
+        return type(self)(
+            language=configured_language,
+            group_words=self.group_words,
+            **self._language_options(),
+        )
+
+    def _get_group_words(self):
+        if self._group_words_cache is not None:
+            return self._group_words_cache
+        if self.group_words is None:
+            try:
+                self._group_words_cache = self.GROUP_WORDS[
+                    self.language
+                ]().get_group_words()
+            except KeyError as error:
+                raise ValueError(
+                    f"No default gender seed words for {self.language!r}; "
+                    "provide group_words explicitly."
+                ) from error
+        else:
+            self._group_words_cache = self.group_words
+        return self._group_words_cache
+
+    def _get_gender_words(self):
+        if self._female_words is None:
+            group_words = self._get_group_words()
+            self._female_words = self._normalize_vocabulary(
+                group_words.get_words("female")
+            )
+            self._male_words = self._normalize_vocabulary(
+                group_words.get_words("male")
+            )
+        return self._female_words, self._male_words
+
+    @staticmethod
+    def _normalize_vocabulary(words):
+        return {
+            word.strip().lower()
+            for word in words
+            if isinstance(word, str) and word.strip()
+        }
+
+    def _require_language(self) -> None:
+        if not self.language:
+            raise ValueError(
+                f"Language must be specified for {type(self).__name__}. "
+                "Use the 'for_language' method to configure the metric."
+            )
+
+
+class GenderBiasMetric(BaseGenderBiasMetric):
+    """Count gendered words and report their proportions and balance ratio."""
+
+    @property
+    def name(self) -> str:
+        return "gender-bias"
+
     def compute(self, values: Iterable[Any]) -> Dict[str, Any]:
+        self._require_language()
+        female_words, male_words = self._get_gender_words()
         female_count = 0
         male_count = 0
 
@@ -78,12 +119,9 @@ class GenderBiasMetric(BaseMetric):
 
             tokens = self._tokenizer.findall(val)
             for token in tokens:
-                if (
-                    token.lower() in self.ci_female_words
-                    or token in self.cs_female_words
-                ):
+                if token.lower() in female_words:
                     female_count += 1
-                if token.lower() in self.ci_male_words or token in self.cs_male_words:
+                if token.lower() in male_words:
                     male_count += 1
 
         if female_count == 0 and male_count == 0:
@@ -106,7 +144,7 @@ class GenderBiasMetric(BaseMetric):
         }
 
 
-class ContextualGenderBiasMetric(BaseMetric):
+class ContextualGenderBiasMetric(BaseGenderBiasMetric):
     """Compute contextual count-disparity and log-score gender bias metrics."""
 
     CONTEXTS = {
@@ -114,22 +152,6 @@ class ContextualGenderBiasMetric(BaseMetric):
         "infinite": InfiniteContext,
         "continual": ContinualContext,
         "continuous": ContinualContext,
-    }
-    GROUP_WORDS = {
-        "english": EnglishGenderedWords,
-        "spanish": SpanishGenderedWords,
-        "valencian": ValencianGenderedWords,
-        "catalan": ValencianGenderedWords,
-    }
-    LANGUAGE_ALIASES = {
-        "en": "english",
-        "eng": "english",
-        "es": "spanish",
-        "spa": "spanish",
-        "ca": "catalan",
-        "cat": "catalan",
-        "va": "valencian",
-        "val": "valencian",
     }
 
     def __init__(
@@ -139,9 +161,8 @@ class ContextualGenderBiasMetric(BaseMetric):
         group_words: Any = None,
         use_root: bool = True,
     ):
-        self.language = language.lower() if language else language
+        super().__init__(language=language, group_words=group_words)
         self.context = context
-        self.group_words = group_words
         self.use_root = use_root
         self._bias_score = None
 
@@ -149,32 +170,12 @@ class ContextualGenderBiasMetric(BaseMetric):
     def name(self) -> str:
         return "contextual-gender-bias"
 
-    @property
-    def target_types(self) -> List[str]:
-        return ["text"]
-
-    def for_language(self, language: str) -> "ContextualGenderBiasMetric":
-        language_code = language.strip().lower().replace("_", "-").split("-", 1)[0]
-        configured_language = self.LANGUAGE_ALIASES.get(language_code, language_code)
-        return type(self)(
-            language=configured_language,
-            context=self.context,
-            group_words=self.group_words,
-            use_root=self.use_root,
-        )
+    def _language_options(self) -> Dict[str, Any]:
+        return {"context": self.context, "use_root": self.use_root}
 
     def _get_bias_score(self) -> BiasScore:
         if self._bias_score is None:
-            group_words = self.group_words
-            if group_words is None:
-                try:
-                    group_words = self.GROUP_WORDS[self.language]().get_group_words()
-                except KeyError as error:
-                    raise ValueError(
-                        f"No default gender seed words for {self.language!r}; "
-                        "provide group_words explicitly."
-                    ) from error
-
+            group_words = self._get_group_words()
             context = self.context
             if isinstance(context, str):
                 try:
@@ -196,12 +197,7 @@ class ContextualGenderBiasMetric(BaseMetric):
         return self._bias_score
 
     def compute(self, values: Iterable[Any]) -> Dict[str, Dict[str, float]]:
-        if not self.language:
-            raise ValueError(
-                "Language must be specified for ContextualGenderBiasMetric. "
-                "Use the 'for_language' method to configure the metric."
-            )
-
+        self._require_language()
         texts = [value for value in values if isinstance(value, str)]
         if not texts:
             return {
