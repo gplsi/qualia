@@ -3,11 +3,11 @@
 #SBATCH --output=logs/%x-[%j].out       # Standard output (stdout) file
 #SBATCH --error=logs/%x-[%j].err        # Standard error (stderr) file
 #SBATCH --partition=dgx                 # Cluster partition to use
+#SBATCH --nodelist=allen.iuii.ua.es
 #SBATCH --mem=32G                       # Required RAM memory
 #SBATCH --nodes=1                       # Number of nodes
 #SBATCH --cpus-per-task=2               # Number of CPUs per task
 #SBATCH --time=48:00:00                 # Maximum execution time (HH:MM:SS)
-#SBATCH --gres=gpu:1                    # GPU required
 
 # Ensure required variables are provided
 : "${CONDA_PATH:?Environment variable CONDA_PATH is required}"

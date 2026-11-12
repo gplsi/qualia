@@ -1,4 +1,8 @@
 import re
+import random
+from itertools import chain
+from numbers import Real
+from statistics import mean, median, pstdev
 from typing import Iterable, Any, List, Dict
 
 from bfair.metrics.lm import (
@@ -160,10 +164,26 @@ class ContextualGenderBiasMetric(BaseGenderBiasMetric):
         context: Any = "continuous",
         group_words: Any = None,
         use_root: bool = True,
+        acceptance_prob: float = None,
+        sample_size: int = 30,
+        seed: int = None,
     ):
+        if acceptance_prob is not None and (
+            isinstance(acceptance_prob, bool)
+            or not isinstance(acceptance_prob, Real)
+            or not 0 <= acceptance_prob <= 1
+        ):
+            raise ValueError("acceptance_prob must be a number between 0 and 1")
+        if isinstance(sample_size, bool) or not isinstance(sample_size, int) or sample_size < 1:
+            raise ValueError("sample_size must be a positive integer")
+        if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int)):
+            raise ValueError("seed must be an integer or None")
         super().__init__(language=language, group_words=group_words)
         self.context = context
         self.use_root = use_root
+        self.acceptance_prob = acceptance_prob
+        self.sample_size = sample_size
+        self.seed = seed
         self._bias_score = None
 
     @property
@@ -171,7 +191,13 @@ class ContextualGenderBiasMetric(BaseGenderBiasMetric):
         return "contextual-gender-bias"
 
     def _language_options(self) -> Dict[str, Any]:
-        return {"context": self.context, "use_root": self.use_root}
+        return {
+            "context": self.context,
+            "use_root": self.use_root,
+            "acceptance_prob": self.acceptance_prob,
+            "sample_size": self.sample_size,
+            "seed": self.seed,
+        }
 
     def _get_bias_score(self) -> BiasScore:
         if self._bias_score is None:
@@ -196,10 +222,54 @@ class ContextualGenderBiasMetric(BaseGenderBiasMetric):
             )
         return self._bias_score
 
-    def compute(self, values: Iterable[Any]) -> Dict[str, Dict[str, float]]:
+    def compute(self, values: Iterable[Any]) -> Dict[str, Dict[str, Any]]:
         self._require_language()
-        texts = [value for value in values if isinstance(value, str)]
-        if not texts:
+        if self.acceptance_prob is None:
+            return self._compute_sample(
+                value for value in values if isinstance(value, str)
+            )
+
+        rng = random.Random(self.seed)
+        subcollections = [[] for _ in range(self.sample_size)]
+        for value in values:
+            if isinstance(value, str):
+                for subcollection in subcollections:
+                    if rng.random() < self.acceptance_prob:
+                        subcollection.append(value)
+
+        results = [self._compute_sample(iter(sample)) for sample in subcollections]
+        report = {
+            mode: {
+                key: {
+                    "min": min(subcollection_values),
+                    "max": max(subcollection_values),
+                    "mean": mean(subcollection_values),
+                    "stdev": pstdev(subcollection_values),
+                    "median": median(subcollection_values),
+                }
+                for key in ("mean", "stdev")
+                for subcollection_values in [
+                    [result[mode][key] for result in results]
+                ]
+            }
+            for mode in (BiasScore.S_RATIO, BiasScore.S_LOG)
+        }
+        subcollection_lengths = [len(sample) for sample in subcollections]
+        report["support"] = {
+            "sample_size": self.sample_size,
+            "min": min(subcollection_lengths),
+            "max": max(subcollection_lengths),
+            "mean": mean(subcollection_lengths),
+            "stdev": pstdev(subcollection_lengths),
+            "median": median(subcollection_lengths),
+        }
+        return report
+
+    def _compute_sample(
+        self, texts: Iterable[str]
+    ) -> Dict[str, Dict[str, float]]:
+        first_text = next(iter(texts), None)
+        if first_text is None:
             return {
                 mode: {"mean": 0.0, "stdev": 0.0}
                 for mode in (BiasScore.S_RATIO, BiasScore.S_LOG)
@@ -207,7 +277,7 @@ class ContextualGenderBiasMetric(BaseGenderBiasMetric):
 
         bias_score = self._get_bias_score()
         bias_score.group_words.reset_context()
-        scores, _ = bias_score(texts)
+        scores, _ = bias_score(chain((first_text,), texts))
         return {
             mode: {"mean": float(scores[mode][0]), "stdev": float(scores[mode][1])}
             for mode in (BiasScore.S_RATIO, BiasScore.S_LOG)

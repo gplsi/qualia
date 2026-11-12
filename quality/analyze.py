@@ -138,6 +138,21 @@ def main():
         ),
     )
     parser.add_argument(
+        "--acceptance-prob",
+        type=float,
+        default=None,
+        help=(
+            "Per-item inclusion probability for contextual gender bias subcollections. "
+            "Enables sampling when provided (range: 0 to 1)."
+        ),
+    )
+    parser.add_argument(
+        "--sample-size",
+        type=int,
+        default=30,
+        help="Number of subcollections for contextual gender bias sampling (default: 30).",
+    )
+    parser.add_argument(
         "--log-level",
         default="WARNING",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -229,7 +244,10 @@ def main():
         MinhashDuplicationMetric(),
         MetadataYearCountMetric(),
         GenderBiasMetric(),
-        ContextualGenderBiasMetric(),
+        ContextualGenderBiasMetric(
+            acceptance_prob=args.acceptance_prob,
+            sample_size=args.sample_size,
+        ),
         STTRMetric(),
         MTLDMetric(),
     ]
